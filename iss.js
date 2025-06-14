@@ -1,8 +1,14 @@
+const { error } = require("console");
 const needle = require("needle");
 
 
 const fetchMyIP = function(callback) {
   needle.get("https://api.ipify.org?format=json", (error, response, body) => {
+    if (response.statusCode !== 200) {
+      const msg = `Status Code ${response.statusCode} when fetching IP. Response: ${body}`;
+      callback(Error(msg), null);
+      return;
+    }
     if (error) {
       callback(error, body);
       return;
@@ -11,11 +17,26 @@ const fetchMyIP = function(callback) {
     } else {
       callback(error, body.ip);
     }
+
+  });
+};
+
+const fetchCoordsByIP = function(ip, callback) {
+  needle.get(`http://ipwho.is/${ip}`, (error, response, body) => {
     if (response.statusCode !== 200) {
-    const msg = `Status Code ${response.statusCode} when fetching IP. Response: ${body}`;
-    callback(Error(msg), null);
-    return;
-  }
+      const msg = `Status Code ${response.statusCode} when fetching Coordinates. Response: ${body}`;
+      callback(Error(msg), null);
+      return;
+    }
+
+    if (error) {
+      callback(error, body);
+      return;
+    } else if (body.length === 0) {
+      callback(error, null);
+    } else {
+      callback(error, body.longitude, body.latitude);
+    }
   });
 };
 
@@ -23,5 +44,4 @@ const fetchMyIP = function(callback) {
 
 
 
-
-module.exports = { fetchMyIP };
+module.exports = { fetchMyIP, fetchCoordsByIP };
